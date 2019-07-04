@@ -66,20 +66,32 @@ public class word2vec {
         System.out.println(vec.similarity("good", "bad"));
        */
 
+        List<String> Groundtruth =new ArrayList<String>() ;
+        List<String> Predictions =new ArrayList<String>();
+
+
+
         InputStream posModelIn = null;
         InputStream tokenModelIn = null;
 
-        String csvFile = "/Users/dikshitasalecha/Documents/wor2vec.csv";
+        String csvFile = "/Users/dikshitasalecha/Documents/rssk.csv";
         CSVReader reader = null;
 
         try {
             SimpleTokenizer simpleTokenizer = SimpleTokenizer.INSTANCE;
 
+
+
+
             reader = new CSVReader(new FileReader(csvFile));
             String[] line;
-            while ((line = reader.readNext()) != null) {
+
+
+            while ((line = reader.readNext()) != null)
+            {
                 //	("\nTitle:  " + line[0] + ",\n type:" + line[1] + " ,\n Description:" + line[2] + "]");
                 String sentence = line[0];
+                Groundtruth.add(line[1]);
                 // String sentence = "This is a terrible idea to execute ";
                 // Tokenizing the given sentence
                 String tokens[] = simpleTokenizer.tokenize(sentence);
@@ -103,35 +115,93 @@ public class word2vec {
                 String tags[] = posTagger.tag(tokens);
                 // Getting the probabilities of the tags given to the tokens
 
-                double good=0;
-                double bad=0;
-                int count=0;
+                double good = 0;
+                double bad = 0;
 
-                System.out.println("Token\t:\tTag\t:\n----------");
+                //System.out.println("Token\t:\tTag\t:\n----------");
                 //for (int i = 0; i < tokens.length; i++)
-                 for(int i=0;i< tokens.length;i++)
-                   {
-                     if(tags[i]=="JJ" || tags[i]=="JJR" || tags[i]=="JJS" || tags[i]=="NNS")
-                     {
-                         good += vec.similarity(tokens[i], "good");
-                         bad += vec.similarity(tokens[i], "bad");
-                         count = count + 1;
-                     }
-                     else
-                         continue;;
+               // System.out.println(good +"\t");
+                //System.out.print(bad);
 
+
+                for (int i = 0; i < tokens.length; i++)
+                {
+                    if (tags[i] .equals("JJ") || tags[i] .equals( "JJR" )||
+                            tags[i] .equals( "JJS" )|| tags[i].equals("NNS") ||
+                            tags[i].equals("VB") || tags[i].equals("VBZ")||
+                            tags[i].equals("VBG") || tags[i].equals("VBD" ))
+                    {
+                       // System.out.println(tokens[i] + "\t:\t" + tags[i] + "\t\t");
+                        good = good +vec.similarity(tokens[i], "good");
+                        bad = bad + vec.similarity(tokens[i], "bad");
+                    }
+
+                    else
+                       // System.out.println(tokens[i] + "\t:\t" + tags[i] + "\t\t");
+                        continue;
 
 
 
                     //System.out.println(tokens[i] + "\t:\t" + tags[i] + "\t\t");
                 }
 
+                if(good>bad)
+                    Predictions.add("Good");
+                else
+                    Predictions.add("Bad");
+
+
+            }
+
+            System.out.println(Arrays.toString(Predictions.toArray()));
+            System.out.println(Arrays.toString(Groundtruth.toArray()));
+
+
+            int tp=0,tn=0,fp=0,fn=0;
+
+
+            for (int i=0; i<Groundtruth.size(); i++)
+            {
+                if (Groundtruth.get(i).equals("Good") && (Predictions.get(i).equals("Good")))
+                {
+                    tp=tp+1;
+                }
+
+                else if (Groundtruth.get(i).equals("Bad")&& Predictions.get(i).equals("Bad"))
+                {
+                    tn=tn+1;
+                }
+
+                else if (Groundtruth.get(i).equals("Bad")&& Predictions.get(i).equals("Good"))
+                {
+                    fp=fp+1;
+                }
+
+                //if (Groundtruth.get(i).equals("Good")&& Predictions.get(i).equals("Bad"))
+                else
+                {
+                    fn=fn+1;
+                }
+            }
+
+
+            double precision=tp*100/(tp+fp);
+            double recall = tp*100/ (tp + fn) ;
+
+            System.out.println( "Precision is  "+ precision);
+            System.out.println("Recall is " + recall);
+
+
+
+
 
         }
-        catch (IOException e) {
+        catch (IOException e)
+        {
             // Model loading failed, handle the error
             e.printStackTrace();
         }
+
         finally
         {
             if (tokenModelIn != null)
@@ -148,12 +218,14 @@ public class word2vec {
                 {
                     posModelIn.close();
                 }
-                catch (IOException e) {
+                catch (IOException e)
+                {
                 }
             }
-
-
         }
+
+
+
     }
 
 }
